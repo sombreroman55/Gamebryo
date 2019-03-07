@@ -1,6 +1,5 @@
 /* cpu.h
  * CPU header
- *
  */
 
 #ifndef _CPU_H_
@@ -24,11 +23,17 @@ typedef union
 
 typedef struct
 {
-    uint8_t A;             /* Accumulator */
-    uint8_t F;             /* Flags register */
-    reg_pair_t BC, DE, HL; /* General purpose registers */
-    uint16_t SP;           /* Stack pointer */
-    uint16_t PC;           /* Program counter */
+  char* disassembly;        /* Opcode mnemonic */
+  uint8_t operand_len;      /* Number of operands */
+  void* execute;            /* Pointer to execution code of this instruction */
+} instruction;
+
+typedef struct
+{
+    /* A is the accumulator register and F is the flags register */
+    reg_pair_t AF, BC, DE, HL;  /* General purpose registers */
+    uint16_t SP;                /* Stack pointer */
+    uint16_t PC;                /* Program counter */
 
     int iperiod, icount;
     int ibackup;
