@@ -7,6 +7,11 @@
 
 int main (int argc, char** argv)
 {
-    // system gamebryo;
+    system gamebryo;
+    int quit = 0;
+    while (!quit)
+    {
+        run(gamebryo);
+    }
     return 0;
 }

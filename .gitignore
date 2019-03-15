@@ -1,6 +1,9 @@
 # Backup files
 *~
 
+# Binary exectuable
+gamebryo
+
 # Prerequisites
 *.d
 

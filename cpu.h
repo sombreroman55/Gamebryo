@@ -7,36 +7,29 @@
 
 #include <stdint.h>
 
-/* This union recreates the capabilities of the Game Boy's register set. The CPU
- * has eight 8-bit registers, but some of them can be "combined" to form a
- * 16-bit regsiter.
- */
-typedef union
-{
-    struct
-    {
-        uint8_t lo_byte;
-        uint8_t hi_byte;
-    } eight_reg;
-    uint16_t sixteen_reg;
-} reg_pair_t;
-
 typedef struct
 {
+  uint8_t opcode;           /* Opcode value */
   char* disassembly;        /* Opcode mnemonic */
   uint8_t operand_len;      /* Number of operands */
-  void* execute;            /* Pointer to execution code of this instruction */
 } instruction;
 
 typedef struct
 {
     /* A is the accumulator register and F is the flags register */
-    reg_pair_t AF, BC, DE, HL;  /* General purpose registers */
-    uint16_t SP;                /* Stack pointer */
-    uint16_t PC;                /* Program counter */
+    uint16_t AF, BC, DE, HL;  /* General purpose registers */
+    uint16_t SP;              /* Stack pointer */
+    uint16_t PC;              /* Program counter */
 
     int iperiod, icount;
     int ibackup;
     uint16_t  irequest;
     uint8_t iautoreset;
 } CPU;
+
+void run(CPU* cpu);
+void write_hi_byte(CPU* cpu, uint8_t byte, reg_pair_t reg);
+void write_lo_byte(CPU* cpu, uint8_t byte, reg_pair_t reg);
+void write_word(CPU* cpu, uint16_t byte, reg_pair_t reg);
+
+#endif /* _CPU_H_ */
