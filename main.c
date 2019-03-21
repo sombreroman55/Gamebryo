@@ -4,14 +4,10 @@
 
 //#include "system.h"
 #include <SDL2/SDL.h>
+#include "cpu.h"
 
 int main (int argc, char** argv)
 {
-    system gamebryo;
-    int quit = 0;
-    while (!quit)
-    {
-        run(gamebryo);
-    }
+    CPU cpu;
     return 0;
 }

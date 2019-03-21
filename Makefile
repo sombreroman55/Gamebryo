@@ -1,5 +1,5 @@
 # Files to compile as part of the project
-OBJS = main.c
+OBJS = mem.c cpu.c main.c
 
 # Compiler
 CC = gcc

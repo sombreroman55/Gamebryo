@@ -28,8 +28,8 @@ typedef struct
 } CPU;
 
 void run(CPU* cpu);
-void write_hi_byte(CPU* cpu, uint8_t byte, reg_pair_t reg);
-void write_lo_byte(CPU* cpu, uint8_t byte, reg_pair_t reg);
-void write_word(CPU* cpu, uint16_t byte, reg_pair_t reg);
+void write_hi_byte(uint8_t byte, uint16_t reg);
+void write_lo_byte(uint8_t byte, uint16_t reg);
+void write_word(uint16_t byte, uint16_t reg);
 
 #endif /* _CPU_H_ */

@@ -2,9 +2,11 @@
  * Memory implementation
  */
 
+#include "mem.h"
+
 uint8_t memory[0x10000] = {0};
 
-inline void mem_write(uint8_t byte)
+inline void mem_write(uint8_t addr, uint8_t byte)
 {
     memory[addr] = byte;
 }
