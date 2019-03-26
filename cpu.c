@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "cpu.h"
 #include "mem.h"
+#include "interrupt.h"
 
 /* Macros for writing */
 #define CLEAR_LO_BYTE 0xFF00
@@ -76,16 +77,23 @@ void run(CPU* cpu)
     while(1)
     {
         uint8_t inst = mem_read(cpu->PC);
-        uint8_t operand1, operand2;
+        uint8_t operand1b = 0x00, operand2b = 0x00;      /* Byte-size operands */
+        uint16_t operand1w = 0x0000, operand2w = 0x0000; /* Word-size operands */
         switch(inst)
         {
             /* ------- Miscellaneous/control ------- */
             case 0x00:  /* NOP */
                 break;
             case 0x10:  /* STOP 0 */
+                break;
             case 0x76:  /* HALT */
+                break;
             case 0xF3:  /* DI */
+                interrupt_disable();
+                break;
             case 0xFB:  /* EI */
+                interrupt_enable();
+                break;
 
             /* ------- Jumps/calls ------- */
             case 0x18:  /* JR r8 */
@@ -123,73 +131,73 @@ void run(CPU* cpu)
             case 0x02:  /* LD (BC),A */
                 break;
             case 0x06:  /* LD B,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = mem_read(cpu->PC+1);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x0A:  /* LD A,(BC) */
                 break;
             case 0x0E:  /* LD C,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_lo_byte(operand1, cpu->BC);
+                operand1b = mem_read(cpu->PC+1);
+                write_lo_byte(operand1b, cpu->BC);
                 break;
             case 0x12:  /* LD (DE),A */
             case 0x16:  /* LD D,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_hi_byte(operand1, cpu->DE);
+                operand1b = mem_read(cpu->PC+1);
+                write_hi_byte(operand1b, cpu->DE);
                 break;
             case 0x1A:  /* LD A,(DE) */
             case 0x1E:  /* LD E,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_lo_byte(operand1, cpu->DE);
+                operand1b = mem_read(cpu->PC+1);
+                write_lo_byte(operand1b, cpu->DE);
                 break;
             case 0x22:  /* LD (HL+),A */
             case 0x26:  /* LD H,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_hi_byte(operand1, cpu->HL);
+                operand1b = mem_read(cpu->PC+1);
+                write_hi_byte(operand1b, cpu->HL);
                 break;
             case 0x2A:  /* LD A,(HL+) */
             case 0x2E:  /* LD L,d8 */
-                operand1 = mem_read(cpu->PC+1);
-                write_lo_byte(operand1, cpu->HL);
+                operand1b = mem_read(cpu->PC+1);
+                write_lo_byte(operand1b, cpu->HL);
                 break;
             case 0x32:  /* LD (HL-),A */
             case 0x36:  /* LD (HL),d8 */
-                operand1 = mem_read(cpu->PC+1);
-                mem_write(cpu->HL, operand1);
+                operand1b = mem_read(cpu->PC+1);
+                mem_write(cpu->HL, operand1b);
                 break;
             case 0x3A:  /* LD A,(HL-) */
             case 0x3E:  /* LD A,d8 */
             case 0x40:  /* LD B,B */
-                operand1 = read_hi_byte(cpu->BC);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_hi_byte(cpu->BC);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x41:  /* LD B,C */
-                operand1 = read_lo_byte(cpu->BC);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_lo_byte(cpu->BC);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x42:  /* LD B,D */
-                operand1 = read_hi_byte(cpu->DE);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_hi_byte(cpu->DE);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x43:  /* LD B,E */
-                operand1 = read_lo_byte(cpu->DE);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_lo_byte(cpu->DE);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x44:  /* LD B,H */
-                operand1 = read_hi_byte(cpu->HL);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_hi_byte(cpu->HL);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x45:  /* LD B,L */
-                operand1 = read_lo_byte(cpu->HL);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_lo_byte(cpu->HL);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x46:  /* LD B,(HL) */
-                operand1 = mem_read(cpu->HL);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = mem_read(cpu->HL);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x47:  /* LD B,A */
-                operand1 = read_hi_byte(cpu->AF);
-                write_hi_byte(operand1, cpu->BC);
+                operand1b = read_hi_byte(cpu->AF);
+                write_hi_byte(operand1b, cpu->BC);
                 break;
             case 0x48:  /* LD C,B */
                 break;
@@ -263,22 +271,67 @@ void run(CPU* cpu)
 
             /* ------- 16-bit loads/stores ------- */
             case 0x01:  /* LD BC,d16 */
+                operand1w = (mem_read(cpu->PC+1) << 8) | mem_read(cpu->PC+2);
+                write_word(operand1w, cpu->BC);
                 break;
             case 0x08:  /* LD (a16),SP */
+                operand1w = (mem_read(cpu->PC+1) << 8) | mem_read(cpu->PC+2);
+                mem_write(operand1w, read_lo_byte(cpu->SP));
+                mem_write(operand1w+1, read_hi_byte(cpu->SP));
                 break;
             case 0x11:  /* LD DE,d16 */
+                operand1w = (mem_read(cpu->PC+1) << 8) | mem_read(cpu->PC+2);
+                write_word(operand1w, cpu->BC);
+                break;
             case 0x21:  /* LD HL,d16 */
+                operand1w = (mem_read(cpu->PC+1) << 8) | mem_read(cpu->PC+2);
+                write_word(operand1w, cpu->BC);
+                break;
             case 0x31:  /* LD SP,d16 */
+                operand1w = (mem_read(cpu->PC+1) << 8) | mem_read(cpu->PC+2);
+                write_word(operand1w, cpu->BC);
+                break;
             case 0xC1:  /* POP BC */
+                operand1w |= (mem_read(cpu->SP++) << 8);
+                operand1w |= mem_read(cpu->SP++);
+                write_word(operand1w, cpu->BC);
+                break;
             case 0xC5:  /* PUSH BC */
+                mem_write(--cpu->SP, read_hi_byte(cpu->BC));
+                mem_write(--cpu->SP, read_lo_byte(cpu->BC));
+                break;
             case 0xD1:  /* POP DE */
+                operand1w |= (mem_read(cpu->SP++) << 8);
+                operand1w |= mem_read(cpu->SP++);
+                write_word(operand1w, cpu->DE);
+                break;
             case 0xD5:  /* PUSH DE */
+                mem_write(--cpu->SP, read_hi_byte(cpu->DE));
+                mem_write(--cpu->SP, read_lo_byte(cpu->DE));
+                break;
             case 0xE1:  /* POP HL */
+                operand1w |= (mem_read(cpu->SP++) << 8);
+                operand1w |= mem_read(cpu->SP++);
+                write_word(operand1w, cpu->HL);
+                break;
             case 0xE5:  /* PUSH HL */
+                mem_write(--cpu->SP, read_hi_byte(cpu->HL));
+                mem_write(--cpu->SP, read_lo_byte(cpu->HL));
+                break;
             case 0xF1:  /* POP AF */
+                operand1w |= (mem_read(cpu->SP++) << 8);
+                operand1w |= mem_read(cpu->SP++);
+                write_word(operand1w, cpu->AF);
+                break;
             case 0xF5:  /* PUSH AF */
+                mem_write(--cpu->SP, read_hi_byte(cpu->AF));
+                mem_write(--cpu->SP, read_lo_byte(cpu->AF));
+                break;
             case 0xF8:  /* LD HL,SP+r8 */
+                break;
             case 0xF9:  /* LD SP,HL */
+                write_word(cpu->HL, cpu->SP);
+                break;
 
             /* ------- 8-bit arithmetic/logic ------- */
             case 0x04:  /* INC B */
@@ -477,13 +530,29 @@ void run(CPU* cpu)
                         case 0x3F: /* SRL A */
 
                         case 0x40: /* BIT 0,B */
+                            test_bit(read_hi_byte(cpu->BC), 0);
+                            break;
                         case 0x41: /* BIT 0,C */
+                            test_bit(read_lo_byte(cpu->BC), 0);
+                            break;
                         case 0x42: /* BIT 0,D */
+                            test_bit(read_lo_byte(cpu->DE), 0);
+                            break;
                         case 0x43: /* BIT 0,E */
+                            test_bit(read_lo_byte(cpu->DE), 0);
+                            break;
                         case 0x44: /* BIT 0,H */
+                            test_bit(read_lo_byte(cpu->HL), 0);
+                            break;
                         case 0x45: /* BIT 0,L */
+                            test_bit(read_lo_byte(cpu->HL), 0);
+                            break;
                         case 0x46: /* BIT 0,(HL) */
+                            test_bit(mem_read(cpu->HL), 0);
+                            break;
                         case 0x47: /* BIT 0,A */
+                            test_bit(read_hi_byte(cpu->AF), 0);
+                            break;
                         case 0x48: /* BIT 1,B */
                         case 0x49: /* BIT 1,C */
                         case 0x4A: /* BIT 1,D */
