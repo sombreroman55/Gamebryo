@@ -1,5 +1,7 @@
-# Backup files
+# Text editor auto-generated files
 *~
+*.un
+*.swp
 
 # Binary exectuable
 gamebryo

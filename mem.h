@@ -9,7 +9,7 @@
 
 extern uint8_t memory[0x10000];
 
-inline void mem_write(uint8_t addr, uint8_t data);
-inline uint8_t mem_read(uint8_t addr);
+void mem_write(uint8_t addr, uint8_t data);
+uint8_t mem_read(uint8_t addr);
 
 #endif /* _MEM_H_ */

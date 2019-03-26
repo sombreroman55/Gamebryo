@@ -21,15 +21,9 @@ typedef struct
     uint16_t SP;              /* Stack pointer */
     uint16_t PC;              /* Program counter */
 
-    int iperiod, icount;
-    int ibackup;
-    uint16_t  irequest;
-    uint8_t iautoreset;
 } CPU;
 
+void init(CPU* cpu);
 void run(CPU* cpu);
-void write_hi_byte(uint8_t byte, uint16_t reg);
-void write_lo_byte(uint8_t byte, uint16_t reg);
-void write_word(uint16_t byte, uint16_t reg);
 
 #endif /* _CPU_H_ */

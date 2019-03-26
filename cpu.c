@@ -7,103 +7,206 @@
 #include "cpu.h"
 #include "mem.h"
 
-static void illegal(void);
+/* Macros for writing */
+#define CLEAR_LO_BYTE 0xFF00
+#define CLEAR_HI_BYTE 0x00FF
 
-void write_hi_byte(uint8_t byte, uint16_t reg)
+/* Macros for reading */
+#define LO_BYTE_MASK 0x00FF
+#define HI_BYTE_MASK 0xFF00
+
+static inline void illegal(void);
+
+static inline void write_hi_byte(uint8_t byte, uint16_t reg)
 {
-    reg &= (byte << 8);
+    reg &= CLEAR_HI_BYTE;
+    reg |= (byte << 8);
 }
 
+static inline void write_lo_byte(uint8_t byte, uint16_t reg)
+{
+    reg &= CLEAR_LO_BYTE;
+    reg |= byte;
+}
+
+static inline void write_word(uint16_t word, uint16_t reg)
+{
+    reg = word;
+}
+
+static inline uint8_t read_hi_byte(uint16_t reg)
+{
+    return (uint8_t)((reg & HI_BYTE_MASK) >> 8);
+}
+
+static inline uint8_t read_lo_byte(uint16_t reg)
+{
+    return (uint8_t)(reg & LO_BYTE_MASK);
+}
+
+static inline void set_bit(uint8_t byte, int pos)
+{
+    byte |= (1 << pos);
+}
+
+static inline void clear_bit(uint8_t byte, int pos)
+{
+    byte &= ~(1 << pos);
+}
+
+static inline int test_bit(uint8_t byte, int pos)
+{
+    return (byte >> pos) & 1;
+}
+
+/* Initialize the CPU */
+void init(CPU* cpu)
+{
+    cpu->AF = 0x01B0;
+    cpu->BC = 0x0013;
+    cpu->DE = 0x00D8;
+    cpu->HL = 0x014D;
+    cpu->SP = 0xFFFE;
+    cpu->PC = 0x0100;
+}
+
+/* Run the CPU */
 void run(CPU* cpu)
 {
     while(1)
     {
-        switch(memory[cpu->PC])
+        uint8_t inst = mem_read(cpu->PC);
+        uint8_t operand1, operand2;
+        switch(inst)
         {
+            /* ------- Miscellaneous/control ------- */
             case 0x00:  /* NOP */
-            case 0x01:  /* LD BC,d16 */
-            case 0x02:  /* LD (BC),A */
-            case 0x03:  /* INC BC */
-            case 0x04:  /* INC B */
-            case 0x05:  /* DEC B */
-            case 0x06:  /* LD B,d8 */
-            case 0x07:  /* RLCA */
-            case 0x08:  /* LD (a16),SP */
-            case 0x09:  /* ADD HL,BC */
-            case 0x0A:  /* LD A,(BC) */
-            case 0x0B:  /* DEC BC */
-            case 0x0C:  /* INC C */
-            case 0x0D:  /* DEC C */
-            case 0x0E:  /* LD C,d8 */
-            case 0x0F:  /* RRCA */
-
+                break;
             case 0x10:  /* STOP 0 */
-            case 0x11:  /* LD DE,d16 */
-            case 0x12:  /* INC DE */
-            case 0x14:  /* INC D */
-            case 0x15:  /* DEC D */
-            case 0x16:  /* LD D,d8 */
-            case 0x17:  /* RLA */
+            case 0x76:  /* HALT */
+            case 0xF3:  /* DI */
+            case 0xFB:  /* EI */
+
+            /* ------- Jumps/calls ------- */
             case 0x18:  /* JR r8 */
-            case 0x19:  /* ADD HL,DE */
-            case 0x1A:  /* LD A,(DE) */
-            case 0x1B:  /* DEC DE */
-            case 0x1C:  /* INC E */
-            case 0x1D:  /* DEC E */
-            case 0x1E:  /* LD E,d8 */
-            case 0x1F:  /* RRA */
-
             case 0x20:  /* JR NZ,r8 */
-            case 0x21:  /* LD HL,d16 */
-            case 0x22:  /* LD (HL+),A */
-            case 0x23:  /* INC HL */
-            case 0x24:  /* INC H */
-            case 0x25:  /* DEC H */
-            case 0x26:  /* LD H,d8 */
-            case 0x27:  /* DAA */
             case 0x28:  /* JR Z,r8 */
-            case 0x29:  /* ADD HL,HL */
-            case 0x2A:  /* LD A,(HL+) */
-            case 0x2B:  /* DEC HL */
-            case 0x2C:  /* INC L */
-            case 0x2D:  /* DEC L */
-            case 0x2E:  /* LD L,d8 */
-            case 0x2F:  /* CPL */
-
             case 0x30:  /* JR NC,r8 */
-            case 0x31:  /* LD SP,d16 */
-            case 0x32:  /* LD (HL-),A */
-            case 0x33:  /* INC SP */
-            case 0x34:  /* INC (HL) */
-            case 0x35:  /* DEC (HL) */
-            case 0x36:  /* LD (HL),d8 */
-            case 0x37:  /* SCF */
             case 0x38:  /* JR C,r8 */
-            case 0x39:  /* ADD HL,SP */
+            case 0xC0:  /* RET NZ */
+            case 0xC2:  /* JP NZ,a16 */
+            case 0xC3:  /* JP a16 */
+            case 0xC4:  /* CALL NZ,a16 */
+            case 0xC7:  /* RST 00H */
+            case 0xC8:  /* RET Z */
+            case 0xC9:  /* RET */
+            case 0xCA:  /* JP Z,a16 */
+            case 0xCC:  /* CALL Z,a16 */
+            case 0xCD:  /* CALL a16 */
+            case 0xCF:  /* RST 08H */
+            case 0xD0:  /* RET NC */
+            case 0xD2:  /* JP NC,a16 */
+            case 0xD4:  /* CALL NC,a16 */
+            case 0xD7:  /* RST 10H */
+            case 0xD8:  /* RET C */
+            case 0xD9:  /* RETI */
+            case 0xDA:  /* JP C,a16 */
+            case 0xDC:  /* CALL C,a16 */
+            case 0xDF:  /* RST 18H */
+            case 0xE7:  /* RST 20H */
+            case 0xE9:  /* JP (HL) */
+            case 0xEF:  /* RST 28H */
+            case 0xF7:  /* RST 30H */
+            case 0xFF:  /* RST 38H */
+
+            /* ------- 8-bit loads/stores ------- */
+            case 0x02:  /* LD (BC),A */
+                break;
+            case 0x06:  /* LD B,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_hi_byte(operand1, cpu->BC);
+                break;
+            case 0x0A:  /* LD A,(BC) */
+                break;
+            case 0x0E:  /* LD C,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_lo_byte(operand1, cpu->BC);
+                break;
+            case 0x12:  /* LD (DE),A */
+            case 0x16:  /* LD D,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_hi_byte(operand1, cpu->DE);
+                break;
+            case 0x1A:  /* LD A,(DE) */
+            case 0x1E:  /* LD E,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_lo_byte(operand1, cpu->DE);
+                break;
+            case 0x22:  /* LD (HL+),A */
+            case 0x26:  /* LD H,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_hi_byte(operand1, cpu->HL);
+                break;
+            case 0x2A:  /* LD A,(HL+) */
+            case 0x2E:  /* LD L,d8 */
+                operand1 = mem_read(cpu->PC+1);
+                write_lo_byte(operand1, cpu->HL);
+                break;
+            case 0x32:  /* LD (HL-),A */
+            case 0x36:  /* LD (HL),d8 */
+                operand1 = mem_read(cpu->PC+1);
+                mem_write(cpu->HL, operand1);
+                break;
             case 0x3A:  /* LD A,(HL-) */
-            case 0x3B:  /* DEC SP */
-            case 0x3C:  /* INC A */
-            case 0x3D:  /* DEC A */
             case 0x3E:  /* LD A,d8 */
-            case 0x3F:  /* CCF */
-
             case 0x40:  /* LD B,B */
+                operand1 = read_hi_byte(cpu->BC);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x41:  /* LD B,C */
+                operand1 = read_lo_byte(cpu->BC);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x42:  /* LD B,D */
+                operand1 = read_hi_byte(cpu->DE);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x43:  /* LD B,E */
+                operand1 = read_lo_byte(cpu->DE);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x44:  /* LD B,H */
+                operand1 = read_hi_byte(cpu->HL);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x45:  /* LD B,L */
+                operand1 = read_lo_byte(cpu->HL);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x46:  /* LD B,(HL) */
+                operand1 = mem_read(cpu->HL);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x47:  /* LD B,A */
+                operand1 = read_hi_byte(cpu->AF);
+                write_hi_byte(operand1, cpu->BC);
+                break;
             case 0x48:  /* LD C,B */
+                break;
             case 0x49:  /* LD C,C */
+                break;
             case 0x4A:  /* LD C,D */
+                break;
             case 0x4B:  /* LD C,E */
+                break;
             case 0x4C:  /* LD C,H */
+                break;
             case 0x4D:  /* LD C,L */
+                break;
             case 0x4E:  /* LD C,(HL) */
+                break;
             case 0x4F:  /* LD C,A */
-
+                break;
             case 0x50:  /* LD D,B */
             case 0x51:  /* LD D,C */
             case 0x52:  /* LD D,D */
@@ -120,7 +223,6 @@ void run(CPU* cpu)
             case 0x5D:  /* LD E,L */
             case 0x5E:  /* LD E,(HL) */
             case 0x5F:  /* LD E,A */
-
             case 0x60:  /* LD H,B */
             case 0x61:  /* LD H,C */
             case 0x62:  /* LD H,D */
@@ -137,14 +239,12 @@ void run(CPU* cpu)
             case 0x6D:  /* LD L,L */
             case 0x6E:  /* LD L,(HL) */
             case 0x6F:  /* LD L,A */
-
             case 0x70:  /* LD (HL),B */
             case 0x71:  /* LD (HL),C */
             case 0x72:  /* LD (HL),D */
             case 0x73:  /* LD (HL),E */
             case 0x74:  /* LD (HL),H */
             case 0x75:  /* LD (HL),L */
-            case 0x76:  /* HALT */
             case 0x77:  /* LD (HL),A */
             case 0x78:  /* LD A,B */
             case 0x79:  /* LD A,C */
@@ -154,7 +254,57 @@ void run(CPU* cpu)
             case 0x7D:  /* LD A,L */
             case 0x7E:  /* LD A,(HL) */
             case 0x7F:  /* LD A,A */
+            case 0xE0:  /* LDH (a8),A */
+            case 0xE2:  /* LD (C),A */
+            case 0xEA:  /* LD (a16),A */
+            case 0xF0:  /* LDH A,(a8) */
+            case 0xF2:  /* LD A,(C) */
+            case 0xFA:  /* LD A,(a16) */
 
+            /* ------- 16-bit loads/stores ------- */
+            case 0x01:  /* LD BC,d16 */
+                break;
+            case 0x08:  /* LD (a16),SP */
+                break;
+            case 0x11:  /* LD DE,d16 */
+            case 0x21:  /* LD HL,d16 */
+            case 0x31:  /* LD SP,d16 */
+            case 0xC1:  /* POP BC */
+            case 0xC5:  /* PUSH BC */
+            case 0xD1:  /* POP DE */
+            case 0xD5:  /* PUSH DE */
+            case 0xE1:  /* POP HL */
+            case 0xE5:  /* PUSH HL */
+            case 0xF1:  /* POP AF */
+            case 0xF5:  /* PUSH AF */
+            case 0xF8:  /* LD HL,SP+r8 */
+            case 0xF9:  /* LD SP,HL */
+
+            /* ------- 8-bit arithmetic/logic ------- */
+            case 0x04:  /* INC B */
+                break;
+            case 0x05:  /* DEC B */
+                break;
+            case 0x0C:  /* INC C */
+                break;
+            case 0x0D:  /* DEC C */
+                break;
+            case 0x14:  /* INC D */
+            case 0x15:  /* DEC D */
+            case 0x1C:  /* INC E */
+            case 0x1D:  /* DEC E */
+            case 0x24:  /* INC H */
+            case 0x25:  /* DEC H */
+            case 0x27:  /* DAA */
+            case 0x2C:  /* INC L */
+            case 0x2D:  /* DEC L */
+            case 0x2F:  /* CPL */
+            case 0x34:  /* INC (HL) */
+            case 0x35:  /* DEC (HL) */
+            case 0x37:  /* SCF */
+            case 0x3C:  /* INC A */
+            case 0x3D:  /* DEC A */
+            case 0x3F:  /* CCF */
             case 0x80:  /* ADD A,B */
             case 0x81:  /* ADD A,C */
             case 0x82:  /* ADD A,D */
@@ -171,7 +321,6 @@ void run(CPU* cpu)
             case 0x8D:  /* ADC A,L */
             case 0x8E:  /* ADC A,(HL) */
             case 0x8F:  /* ADC A,A */
-
             case 0x90:  /* SUB B */
             case 0x91:  /* SUB C */
             case 0x92:  /* SUB D */
@@ -188,7 +337,6 @@ void run(CPU* cpu)
             case 0x9D:  /* SBC A,L */
             case 0x9E:  /* SBC A,(HL) */
             case 0x9F:  /* SBC A,A */
-
             case 0xA0:  /* AND B */
             case 0xA1:  /* AND C */
             case 0xA2:  /* AND D */
@@ -205,7 +353,6 @@ void run(CPU* cpu)
             case 0xAD:  /* XOR L */
             case 0xAE:  /* XOR (HL) */
             case 0xAF:  /* XOR A */
-
             case 0xB0:  /* OR B */
             case 0xB1:  /* OR C */
             case 0xB2:  /* OR D */
@@ -222,79 +369,44 @@ void run(CPU* cpu)
             case 0xBD:  /* CP L */
             case 0xBE:  /* CP (HL) */
             case 0xBF:  /* CP A */
-
-            case 0xC0:  /* RET NZ */
-            case 0xC1:  /* POP BC */
-            case 0xC2:  /* JP NZ,a16 */
-            case 0xC3:  /* JP a16 */
-            case 0xC4:  /* CALL NZ,a16 */
-            case 0xC5:  /* PUSH BC */
             case 0xC6:  /* ADD A,d8 */
-            case 0xC7:  /* RST 00H */
-            case 0xC8:  /* RET Z */
-            case 0xC9:  /* RET */
-            case 0xCA:  /* JP Z,a16 */
-            case 0xCC:  /* CALL Z,a16 */
-            case 0xCD:  /* CALL a16 */
             case 0xCE:  /* ADC A,d8 */
-            case 0xCF:  /* RST 08H */
-
-            case 0xD0:  /* RET NC */
-            case 0xD1:  /* POP DE */
-            case 0xD2:  /* JP NC,a16 */
-            case 0xD4:  /* CALL NC,a16 */
-            case 0xD5:  /* PUSH DE */
             case 0xD6:  /* SUB d8 */
-            case 0xD7:  /* RST 10H */
-            case 0xD8:  /* RET C */
-            case 0xD9:  /* RETI */
-            case 0xDA:  /* JP C,a16 */
-            case 0xDC:  /* CALL C,a16 */
             case 0xDE:  /* SBC A,d8 */
-            case 0xDF:  /* RST 18H */
-
-            case 0xE0:  /* LDH (a8),A */
-            case 0xE1:  /* POP HL */
-            case 0xE2:  /* LD (C),A */
-            case 0xE5:  /* PUSH HL */
             case 0xE6:  /* AND d8 */
-            case 0xE7:  /* RST 20H */
-            case 0xE8:  /* ADD SP,r8 */
-            case 0xE9:  /* JP (HL) */
-            case 0xEA:  /* LD (a16),A */
             case 0xEE:  /* XOR d8 */
-            case 0xEF:  /* RST 28H */
-
-            case 0xF0:  /* LDH A,(a8) */
-            case 0xF1:  /* POP AF */
-            case 0xF2:  /* LD A,(C) */
-            case 0xF3:  /* DI */
-            case 0xF5:  /* PUSH AF */
             case 0xF6:  /* OR d8 */
-            case 0xF7:  /* RST 30H */
-            case 0xF8:  /* LD HL,SP+r8 */
-            case 0xF9:  /* LD SP,HL */
-            case 0xFA:  /* LD A,(a16) */
-            case 0xFB:  /* EI */
-            case 0xFE:  /* CP */
-            case 0xFF:  /* RST 38H */
+            case 0xFE:  /* CP d8 */
 
-                /* Miscellaneous/control */
+            /* ------- 16-bit arithmetic/logic ------- */
+            case 0x03:  /* INC BC */
+                break;
+            case 0x09:  /* ADD HL,BC */
+                break;
+            case 0x0B:  /* DEC BC */
+                break;
+            case 0x13:  /* INC DE */
+            case 0x19:  /* ADD HL,DE */
+            case 0x1B:  /* DEC DE */
+            case 0x23:  /* INC HL */
+            case 0x29:  /* ADD HL,HL */
+            case 0x2B:  /* DEC HL */
+            case 0x33:  /* INC SP */
+            case 0x39:  /* ADD HL,SP */
+            case 0x3B:  /* DEC SP */
+            case 0xE8:  /* ADD SP,r8 */
 
-                /* Jumps/calls */
-
-                /* 8-bit loads/stores */
-
-                /* 16-bit loads/stores */
-
-                /* 8-bit arithmetic/logic */
-
-                /* 16-bit arithmetic/logic */
-
-                /* 8-bit rotates/shifts */
+            /* ------- 8-bit rotates/shifts ------- */
+            case 0x07:  /* RLCA */
+                break;
+            case 0x0F:  /* RRCA */
+                break;
+            case 0x17:  /* RLA */
+            case 0x1F:  /* RRA */
             case 0xCB:  /* PREFIX CB */
                 {
-                    switch (memory[cpu->PC+1])
+                    uint8_t cb_inst = mem_read(cpu->PC+1);
+                    switch (cb_inst)
                     {
                         case 0x00: /* RLC B */
                         case 0x01: /* RLC C */
@@ -571,7 +683,8 @@ void run(CPU* cpu)
                     }
                 }
 
-                /* Unimplemented opcodes */
+            /* Unimplemented opcodes */
+            /* All of these crash the system */
             case 0xD3:
             case 0xDB:
             case 0xDD:
@@ -593,7 +706,7 @@ void run(CPU* cpu)
     }
 }
 
-static void illegal()
+static inline void illegal()
 {
     sprintf(stderr, "ERROR: Illegal opcode!");
     exit(1); /* Exited with error */
