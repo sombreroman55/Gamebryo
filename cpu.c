@@ -39,11 +39,15 @@ void init(CPU* cpu)
 /* Run the CPU */
 void run(CPU* cpu)
 {
+    /* TODO: refactor this to account for the following:
+     *          - the proper amount of cycles to run for
+     *          - algorithmically parse instruction encodings
+     *            to increase efficiency of this switch statement
+     */
     while(1)
     {
         uint8_t inst = mem_read(cpu->PC);
-        uint8_t operand1b = 0x00, operand2b = 0x00;      /* Byte-size operands */
-        uint16_t operand1w = 0x0000, operand2w = 0x0000; /* Word-size operands */
+        uint16_t operand1w = 0x0000; /* Word-size operands */
         switch(inst)
         {
             /* ------- Miscellaneous/control ------- */
@@ -96,75 +100,63 @@ void run(CPU* cpu)
             case 0x02:  /* LD (BC),A */
                 break;
             case 0x06:  /* LD B,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = mem_read(cpu->PC+1);
                 break;
             case 0x0A:  /* LD A,(BC) */
+                cpu->AF.bytes.hi = mem_read(cpu->BC.word);
                 break;
             case 0x0E:  /* LD C,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->BC.bytes.lo = operand1b;
+                cpu->BC.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x12:  /* LD (DE),A */
             case 0x16:  /* LD D,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->DE.bytes.hi = operand1b;
+                cpu->DE.bytes.hi = mem_read(cpu->PC+1);
                 break;
             case 0x1A:  /* LD A,(DE) */
             case 0x1E:  /* LD E,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->DE.bytes.lo = operand1b;
+                cpu->DE.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x22:  /* LD (HL+),A */
             case 0x26:  /* LD H,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->HL.bytes.hi = operand1b;
+                cpu->HL.bytes.hi = mem_read(cpu->PC+1);
                 break;
             case 0x2A:  /* LD A,(HL+) */
             case 0x2E:  /* LD L,d8 */
-                operand1b = mem_read(cpu->PC+1);
-                cpu->HL.bytes.lo = operand1b;
+                cpu->HL.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x32:  /* LD (HL-),A */
             case 0x36:  /* LD (HL),d8 */
-                operand1b = mem_read(cpu->PC+1);
-                mem_write(cpu->HL.word, operand1b);
+                mem_write(cpu->HL.word, mem_read(cpu->PC+1));
                 break;
             case 0x3A:  /* LD A,(HL-) */
             case 0x3E:  /* LD A,d8 */
+                cpu->AF.bytes.hi = mem_read(cpu->PC+1);
             case 0x40:  /* LD B,B */
-                operand1b = cpu->BC.bytes.hi;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->BC.bytes.hi;
                 break;
             case 0x41:  /* LD B,C */
-                operand1b = cpu->BC.bytes.lo;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->BC.bytes.lo;
                 break;
             case 0x42:  /* LD B,D */
-                operand1b = cpu->DE.bytes.hi;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->DE.bytes.hi;
                 break;
             case 0x43:  /* LD B,E */
-                operand1b = cpu->DE.bytes.lo;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->DE.bytes.lo;
                 break;
             case 0x44:  /* LD B,H */
-                operand1b = cpu->HL.bytes.hi;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->HL.bytes.hi;
                 break;
             case 0x45:  /* LD B,L */
-                operand1b = cpu->HL.bytes.lo;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->HL.bytes.lo;
                 break;
             case 0x46:  /* LD B,(HL) */
-                operand1b = mem_read(cpu->HL.word);
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = mem_read(cpu->HL.word);
                 break;
             case 0x47:  /* LD B,A */
-                operand1b = cpu->AF.bytes.hi;
-                cpu->BC.bytes.hi = operand1b;
+                cpu->BC.bytes.hi = cpu->AF.bytes.hi;
                 break;
             case 0x48:  /* LD C,B */
+                cpu->BC.bytes.lo = cpu->BC.bytes.hi;
                 break;
             case 0x49:  /* LD C,C */
                 break;
@@ -300,12 +292,16 @@ void run(CPU* cpu)
 
             /* ------- 8-bit arithmetic/logic ------- */
             case 0x04:  /* INC B */
+                ++cpu->BC.bytes.hi;
                 break;
             case 0x05:  /* DEC B */
+                --cpu->BC.bytes.hi;
                 break;
             case 0x0C:  /* INC C */
+                ++cpu->BC.bytes.lo;
                 break;
             case 0x0D:  /* DEC C */
+                --cpu->BC.bytes.lo;
                 break;
             case 0x14:  /* INC D */
             case 0x15:  /* DEC D */
@@ -398,21 +394,39 @@ void run(CPU* cpu)
 
             /* ------- 16-bit arithmetic/logic ------- */
             case 0x03:  /* INC BC */
+                ++cpu->BC.word;
                 break;
             case 0x09:  /* ADD HL,BC */
                 break;
             case 0x0B:  /* DEC BC */
+                --cpu->BC.word;
                 break;
             case 0x13:  /* INC DE */
+                ++cpu->DE.word;
+                break;
             case 0x19:  /* ADD HL,DE */
+                break;
             case 0x1B:  /* DEC DE */
+                --cpu->DE.word;
+                break;
             case 0x23:  /* INC HL */
+                ++cpu->HL.word;
+                break;
             case 0x29:  /* ADD HL,HL */
+                break;
             case 0x2B:  /* DEC HL */
+                --cpu->HL.word;
+                break;
             case 0x33:  /* INC SP */
+                ++cpu->SP;
+                break;
             case 0x39:  /* ADD HL,SP */
+                break;
             case 0x3B:  /* DEC SP */
+                --cpu->SP;
+                break;
             case 0xE8:  /* ADD SP,r8 */
+                break;
 
             /* ------- 8-bit rotates/shifts ------- */
             case 0x07:  /* RLCA */
@@ -734,7 +748,8 @@ void run(CPU* cpu)
                 break;
 
             default:
-                printf("Unrecognized opcode!");
+                sprintf(stderr, "Unrecognized opcode!");
+                exit(1); /* Exited with error */
                 break;
         }
     }

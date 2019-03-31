@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+/* TODO: use this struct */
 typedef struct
 {
   uint8_t opcode;           /* Opcode value */
@@ -30,10 +31,9 @@ typedef struct
 typedef struct
 {
     /* A is the accumulator register and F is the flags register */
-    gb_register AF, BC, DE, HL;  /* General purpose registers */
+    gb_register AF, BC, DE, HL;   /* General purpose registers */
     uint16_t SP;                  /* Stack pointer */
     uint16_t PC;                  /* Program counter */
-
 } CPU;
 
 void init(CPU* cpu);
