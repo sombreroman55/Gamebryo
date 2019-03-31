@@ -16,10 +16,23 @@ typedef struct
 
 typedef struct
 {
+    union
+    {
+        struct bytes
+        {
+            uint8_t lo;
+            uint8_t hi;
+        } bytes;
+        uint16_t word;
+    };
+} gb_register;
+
+typedef struct
+{
     /* A is the accumulator register and F is the flags register */
-    uint16_t AF, BC, DE, HL;  /* General purpose registers */
-    uint16_t SP;              /* Stack pointer */
-    uint16_t PC;              /* Program counter */
+    gb_register AF, BC, DE, HL;  /* General purpose registers */
+    uint16_t SP;                  /* Stack pointer */
+    uint16_t PC;                  /* Program counter */
 
 } CPU;
 
