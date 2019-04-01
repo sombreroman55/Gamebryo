@@ -98,6 +98,7 @@ void run(CPU* cpu)
 
             /* ------- 8-bit loads/stores ------- */
             case 0x02:  /* LD (BC),A */
+                mem_write(cpu->BC.word, cpu->AF.bytes.hi);
                 break;
             case 0x06:  /* LD B,d8 */
                 cpu->BC.bytes.hi = mem_read(cpu->PC+1);
@@ -109,28 +110,41 @@ void run(CPU* cpu)
                 cpu->BC.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x12:  /* LD (DE),A */
+                mem_write(cpu->DE.word, cpu->AF.bytes.hi);
+                break;
             case 0x16:  /* LD D,d8 */
                 cpu->DE.bytes.hi = mem_read(cpu->PC+1);
                 break;
             case 0x1A:  /* LD A,(DE) */
+                cpu->AF.bytes.hi = mem_read(cpu->DE.word);
+                break;
             case 0x1E:  /* LD E,d8 */
                 cpu->DE.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x22:  /* LD (HL+),A */
+                mem_write(cpu->HL.word++, cpu->AF.bytes.hi);
+                break;
             case 0x26:  /* LD H,d8 */
                 cpu->HL.bytes.hi = mem_read(cpu->PC+1);
                 break;
             case 0x2A:  /* LD A,(HL+) */
+                cpu->AF.bytes.hi = mem_read(cpu->HL.word++);
+                break;
             case 0x2E:  /* LD L,d8 */
                 cpu->HL.bytes.lo = mem_read(cpu->PC+1);
                 break;
             case 0x32:  /* LD (HL-),A */
+                mem_write(cpu->HL.word--, cpu->AF.bytes.hi);
+                break;
             case 0x36:  /* LD (HL),d8 */
                 mem_write(cpu->HL.word, mem_read(cpu->PC+1));
                 break;
             case 0x3A:  /* LD A,(HL-) */
+                cpu->AF.bytes.hi = mem_read(cpu->HL.word--);
+                break;
             case 0x3E:  /* LD A,d8 */
                 cpu->AF.bytes.hi = mem_read(cpu->PC+1);
+                break;
             case 0x40:  /* LD B,B */
                 cpu->BC.bytes.hi = cpu->BC.bytes.hi;
                 break;
@@ -159,8 +173,10 @@ void run(CPU* cpu)
                 cpu->BC.bytes.lo = cpu->BC.bytes.hi;
                 break;
             case 0x49:  /* LD C,C */
+                cpu->BC.bytes.lo = cpu->BC.bytes.lo;
                 break;
             case 0x4A:  /* LD C,D */
+                cpu->BC.bytes.lo = cpu->DE.bytes.hi;
                 break;
             case 0x4B:  /* LD C,E */
                 break;
