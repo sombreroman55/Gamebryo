@@ -15,23 +15,58 @@ typedef struct
   uint8_t operand_len;      /* Number of operands */
 } instruction;
 
+/* TODO: add interrupt information */
 typedef struct
 {
     union
     {
-        struct bytes
+        struct
         {
-            uint8_t lo;
-            uint8_t hi;
-        } bytes;
-        uint16_t word;
+            uint8_t C;
+            uint8_t B;
+        };
+        uint16_t BC;
     };
-} gb_register;
+    union
+    {
+        struct
+        {
+            uint8_t E;
+            uint8_t D;
+        };
+        uint16_t DE;
+    };
+    union
+    {
+        struct
+        {
+            uint8_t L;
+            uint8_t H;
+        };
+        uint16_t HL;
+    };
 
-typedef struct
-{
     /* A is the accumulator register and F is the flags register */
-    gb_register AF, BC, DE, HL;   /* General purpose registers */
+    union
+    {
+        struct
+        {
+            union
+            {
+                struct 
+                {
+                    uint8_t unused   : 4;
+                    uint8_t carry    : 1;
+                    uint8_t half     : 1;
+                    uint8_t subtract : 1;
+                    uint8_t zero     : 1;
+                } flags;
+                uint8_t F;
+            };
+            uint8_t A;
+        };
+        uint16_t AF;
+    };
     uint16_t SP;                  /* Stack pointer */
     uint16_t PC;                  /* Program counter */
 } CPU;
