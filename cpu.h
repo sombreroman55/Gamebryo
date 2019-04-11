@@ -55,11 +55,11 @@ typedef struct
             {
                 struct 
                 {
-                    uint8_t unused   : 4;
-                    uint8_t carry    : 1;
-                    uint8_t half     : 1;
-                    uint8_t subtract : 1;
-                    uint8_t zero     : 1;
+                    uint8_t unused : 4;
+                    uint8_t C      : 1;
+                    uint8_t H      : 1;
+                    uint8_t N      : 1;
+                    uint8_t Z      : 1;
                 } flags;
                 uint8_t F;
             };
@@ -71,7 +71,7 @@ typedef struct
     uint16_t PC;                  /* Program counter */
 } CPU;
 
-void init(CPU* cpu);
-void run(CPU* cpu);
+void cpu_init(CPU* cpu);
+void cpu_tick(CPU* cpu);
 
 #endif /* _CPU_H_ */

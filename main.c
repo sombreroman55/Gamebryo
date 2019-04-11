@@ -9,5 +9,6 @@
 int main (int argc, char** argv)
 {
     CPU cpu;
+    cpu_init(&cpu);
     return 0;
 }
