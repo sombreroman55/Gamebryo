@@ -69,6 +69,7 @@ typedef struct
     };
     uint16_t SP;                  /* Stack pointer */
     uint16_t PC;                  /* Program counter */
+    uint8_t IME;                  /* Interrupt Master Enable flag */
 } CPU;
 
 void cpu_init(CPU* cpu);

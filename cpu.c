@@ -28,9 +28,9 @@ static inline void clear_bit(uint8_t* byte, int pos)
     *byte &= ~(1 << pos);
 }
 
-static inline int test_bit(uint8_t byte, int pos)
+static inline int test_bit(uint8_t* byte, int pos)
 {
-    return (byte >> pos) & 1;
+    return (*byte >> pos) & 1;
 }
 
 /* Initialize the CPU */
@@ -42,6 +42,7 @@ void cpu_init(CPU* cpu)
     cpu->HL = 0x014D;
     cpu->SP = 0xFFFE;
     cpu->PC = 0x0100;
+    cpu->IME = 0x00;
 }
 
 /* Run the CPU */
@@ -595,130 +596,190 @@ void cpu_tick(CPU* cpu)
             cpu->A = ~cpu->A;
             break;
         case 0x34:  /* INC (HL) */
+            mem_write(cpu->HL, mem_read(cpu->HL)+1);
             break;
         case 0x35:  /* DEC (HL) */
+            mem_write(cpu->HL, mem_read(cpu->HL)-1);
             break;
         case 0x37:  /* SCF */
             cpu->flags.C = 0x1;
             break;
         case 0x3C:  /* INC A */
+            ++cpu->A;
             break;
         case 0x3D:  /* DEC A */
+            --cpu->A;
             break;
         case 0x3F:  /* CCF */
             cpu->flags.C = ~cpu->flags.C;
             break;
         case 0x80:  /* ADD A,B */
+            cpu->A += cpu->B;
             break;
         case 0x81:  /* ADD A,C */
+            cpu->A += cpu->C;
             break;
         case 0x82:  /* ADD A,D */
+            cpu->A += cpu->D;
             break;
         case 0x83:  /* ADD A,E */
+            cpu->A += cpu->E;
             break;
         case 0x84:  /* ADD A,H */
+            cpu->A += cpu->H;
             break;
         case 0x85:  /* ADD A,L */
+            cpu->A += cpu->L;
             break;
         case 0x86:  /* ADD A,(HL) */
+            cpu->A += mem_read(cpu->HL);
             break;
-        case 0x87:  /* ADD A,B */
+        case 0x87:  /* ADD A,A */
+            cpu->A += cpu->A;
             break;
         case 0x88:  /* ADC A,B */
+            cpu->A += (cpu->B + cpu->flags.C);
             break;
         case 0x89:  /* ADC A,C */
+            cpu->A += (cpu->C + cpu->flags.C);
             break;
         case 0x8A:  /* ADC A,D */
+            cpu->A += (cpu->D + cpu->flags.C);
             break;
         case 0x8B:  /* ADC A,E */
+            cpu->A += (cpu->E + cpu->flags.C);
             break;
         case 0x8C:  /* ADC A,H */
+            cpu->A += (cpu->H + cpu->flags.C);
             break;
         case 0x8D:  /* ADC A,L */
+            cpu->A += (cpu->L + cpu->flags.C);
             break;
         case 0x8E:  /* ADC A,(HL) */
+            cpu->A += (mem_read(cpu->HL) + cpu->flags.C);
             break;
         case 0x8F:  /* ADC A,A */
+            cpu->A += (cpu->A + cpu->flags.C);
             break;
         case 0x90:  /* SUB B */
+            cpu->A -= cpu->B;
             break;
         case 0x91:  /* SUB C */
+            cpu->A -= cpu->C;
             break;
         case 0x92:  /* SUB D */
+            cpu->A -= cpu->D;
             break;
         case 0x93:  /* SUB E */
+            cpu->A -= cpu->E;
             break;
         case 0x94:  /* SUB H */
+            cpu->A -= cpu->H;
             break;
         case 0x95:  /* SUB L */
+            cpu->A -= cpu->L;
             break;
         case 0x96:  /* SUB (HL) */
+            cpu->A -= mem_read(cpu->HL);
             break;
         case 0x97:  /* SUB A */
+            cpu->A -= cpu->A;
             break;
         case 0x98:  /* SBC A,B */
+            cpu->A -= (cpu->B + cpu->flags.C);
             break;
         case 0x99:  /* SBC A,C */
+            cpu->A -= (cpu->C + cpu->flags.C);
             break;
         case 0x9A:  /* SBC A,D */
+            cpu->A -= (cpu->D + cpu->flags.C);
             break;
         case 0x9B:  /* SBC A,E */
+            cpu->A -= (cpu->E + cpu->flags.C);
             break;
         case 0x9C:  /* SBC A,H */
+            cpu->A -= (cpu->H + cpu->flags.C);
             break;
         case 0x9D:  /* SBC A,L */
+            cpu->A -= (cpu->L + cpu->flags.C);
             break;
         case 0x9E:  /* SBC A,(HL) */
+            cpu->A -= (mem_read(cpu->HL) + cpu->flags.C);
             break;
         case 0x9F:  /* SBC A,A */
+            cpu->A -= (cpu->A + cpu->flags.C);
             break;
         case 0xA0:  /* AND B */
+            cpu->A &= cpu->B;
             break;
         case 0xA1:  /* AND C */
+            cpu->A &= cpu->C;
             break;
         case 0xA2:  /* AND D */
+            cpu->A &= cpu->D;
             break;
         case 0xA3:  /* AND E */
+            cpu->A &= cpu->E;
             break;
         case 0xA4:  /* AND H */
+            cpu->A &= cpu->H;
             break;
         case 0xA5:  /* AND L */
+            cpu->A &= cpu->L;
             break;
         case 0xA6:  /* AND (HL) */
+            cpu->A &= mem_read(cpu->HL);
             break;
         case 0xA7:  /* AND A */
+            cpu->A &= cpu->A;
             break;
         case 0xA8:  /* XOR B */
+            cpu->A ^= cpu->B;
             break;
         case 0xA9:  /* XOR C */
+            cpu->A ^= cpu->C;
             break;
         case 0xAA:  /* XOR D */
+            cpu->A ^= cpu->D;
             break;
         case 0xAB:  /* XOR E */
+            cpu->A ^= cpu->E;
             break;
         case 0xAC:  /* XOR H */
+            cpu->A ^= cpu->H;
             break;
         case 0xAD:  /* XOR L */
+            cpu->A ^= cpu->L;
             break;
         case 0xAE:  /* XOR (HL) */
+            cpu->A ^= mem_read(cpu->HL);
             break;
         case 0xAF:  /* XOR A */
+            cpu->A ^= cpu->A;
             break;
         case 0xB0:  /* OR B */
+            cpu->A |= cpu->B;
             break;
         case 0xB1:  /* OR C */
+            cpu->A |= cpu->C;
             break;
         case 0xB2:  /* OR D */
+            cpu->A |= cpu->D;
             break;
         case 0xB3:  /* OR E */
+            cpu->A |= cpu->E;
             break;
         case 0xB4:  /* OR H */
+            cpu->A |= cpu->H;
             break;
         case 0xB5:  /* OR L */
+            cpu->A |= cpu->L;
             break;
         case 0xB6:  /* OR (HL) */
+            cpu->A |= mem_read(cpu->HL);
             break;
         case 0xB7:  /* OR A */
+            cpu->A |= cpu->A;
             break;
         case 0xB8:  /* CP B */
             break;
@@ -733,6 +794,7 @@ void cpu_tick(CPU* cpu)
         case 0xBD:  /* CP L */
             break;
         case 0xBE:  /* CP (HL) */
+            cpu->A &= mem_read(cpu->HL);
             break;
         case 0xBF:  /* CP A */
             break;
@@ -888,20 +950,36 @@ void cpu_tick(CPU* cpu)
                         break;
 
                     case 0x20: /* SLA B */
+                        cpu->flags.C = test_bit(cpu->B, 7);
+                        cpu->B <<= 1;
                         break;
                     case 0x21: /* SLA C */
+                        cpu->flags.C = test_bit(cpu->C, 7);
+                        cpu->C <<= 1;
                         break;
                     case 0x22: /* SLA D */
+                        cpu->flags.C = test_bit(cpu->D, 7);
+                        cpu->D <<= 1;
                         break;
                     case 0x23: /* SLA E */
+                        cpu->flags.C = test_bit(cpu->E, 7);
+                        cpu->E <<= 1;
                         break;
                     case 0x24: /* SLA H */
+                        cpu->flags.C = test_bit(cpu->H, 7);
+                        cpu->H <<= 1;
                         break;
                     case 0x25: /* SLA L */
+                        cpu->flags.C = test_bit(cpu->L, 7);
+                        cpu->L <<= 1;
                         break;
                     case 0x26: /* SLA (HL) */
+                        cpu->flags.C = test_bit(cpu->B, 7);
+                        cpu->B <<= 1;
                         break;
                     case 0x27: /* SLA A */
+                        cpu->flags.C = test_bit(cpu->A, 7);
+                        cpu->A <<= 1;
                         break;
                     case 0x28: /* SRA B */
                         break;
@@ -980,28 +1058,44 @@ void cpu_tick(CPU* cpu)
                         break;
 
                     case 0x40: /* BIT 0,B */
-                        test_bit(cpu->B, 0);
+                        cpu->flags.Z = !test_bit(cpu->B, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x41: /* BIT 0,C */
-                        test_bit(cpu->C, 0);
+                        cpu->flags.Z = !test_bit(cpu->C, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x42: /* BIT 0,D */
-                        test_bit(cpu->D, 0);
+                        cpu->flags.Z = !test_bit(cpu->D, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x43: /* BIT 0,E */
-                        test_bit(cpu->E, 0);
+                        cpu->flags.Z = !test_bit(cpu->E, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x44: /* BIT 0,H */
-                        test_bit(cpu->H, 0);
+                        cpu->flags.Z = !test_bit(cpu->H, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x45: /* BIT 0,L */
-                        test_bit(cpu->L, 0);
+                        cpu->flags.Z = !test_bit(cpu->L, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x46: /* BIT 0,(HL) */
-                        test_bit(mem_read(cpu->HL), 0);
+                        cpu->flags.Z = !test_bit(mem_read(cpu->HL), 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x47: /* BIT 0,A */
                         test_bit(cpu->A, 0);
+                        cpu->flags.N = 0;
+                        cpu->flags.H = 1;
                         break;
                     case 0x48: /* BIT 1,B */
                         break;
