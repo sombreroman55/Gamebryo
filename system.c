@@ -4,11 +4,8 @@
 
 #include "system.h"
 
-System* initialize_system(void)
+void initialize_system(System* system)
 {
-    System* system;
-    system = malloc(sizeof(System));
-    return system;
 }
 
 void play(System* sys)

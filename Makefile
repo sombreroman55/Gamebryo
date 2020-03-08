@@ -5,7 +5,7 @@ OBJS = mem.c cpu.c interrupt.c main.c
 CC = gcc
 
 # Compiler flags
-COMPILER_FLAGS = -w
+COMPILER_FLAGS = -Wall
 
 # Linker flags
 LINKER_FLAGS = -lSDL2

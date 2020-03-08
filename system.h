@@ -13,6 +13,6 @@ typedef struct
 } System;
 
 System* initialize_system(void);
-void play(System* sys);
+void run(System* sys);
 
 #endif /* _SYSTEM_H_ */

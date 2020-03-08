@@ -615,9 +615,17 @@ void cpu_tick(CPU* cpu)
             break;
         case 0x80:  /* ADD A,B */
             cpu->A += cpu->B;
+            cpu->flags.Z = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.N = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.H = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.C = (cpu->A == 0x0) ? 1 : 0;
             break;
         case 0x81:  /* ADD A,C */
             cpu->A += cpu->C;
+            cpu->flags.Z = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.N = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.H = (cpu->A == 0x0) ? 1 : 0;
+            cpu->flags.C = (cpu->A == 0x0) ? 1 : 0;
             break;
         case 0x82:  /* ADD A,D */
             cpu->A += cpu->D;
