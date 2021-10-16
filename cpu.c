@@ -57,8 +57,8 @@ void cpu_tick(CPU* cpu)
     uint8_t inst = mem_read(cpu->PC);
     uint8_t temp_nibble = 0x00;     /* Nibble-size operand */
     uint16_t operandw = 0x0000;     /* Word-size operand */
-    uint16_t push, call;  /* Word-sized operands */
-    push = call = 0x0000;  /* Word-sized operands */
+    uint16_t push, call;            /* Word-sized operands */
+    push = call = 0x0000;           /* Word-sized operands */
     switch(inst)
     {
         /* ------- Miscellaneous/control ------- */
