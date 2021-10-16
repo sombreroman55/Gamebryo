@@ -6,6 +6,9 @@
 # Binary exectuable
 gamebryo
 
+# ImGui stuff
+imgui.ini
+
 # Prerequisites
 *.d
 
