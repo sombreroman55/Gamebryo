@@ -12,30 +12,31 @@
 #define LO_NIBBLE 0x0F
 #define ZERO_PAGE_BASE 0xFF00
 
-static inline void illegal(void)
+static void illegal(void)
 {
-    sprintf(stderr, "ERROR: Illegal opcode!");
+    fprintf(stderr, "ERROR: Illegal opcode!");
     exit(1); /* Exited with error */
 }
 
-static inline void set_bit(uint8_t* byte, int pos)
+static void set_bit(uint8_t* byte, int pos)
 {
     *byte |= (1 << pos);
 }
 
-static inline void clear_bit(uint8_t* byte, int pos)
+static void clear_bit(uint8_t* byte, int pos)
 {
     *byte &= ~(1 << pos);
 }
 
-static inline int test_bit(uint8_t* byte, int pos)
+static int test_bit(uint8_t byte, int pos)
 {
-    return (*byte >> pos) & 1;
+    return (byte >> pos) & 1;
 }
 
 /* Initialize the CPU */
-void cpu_init(CPU* cpu)
+CPU* cpu_init(void)
 {
+    CPU* cpu = (CPU*)malloc(sizeof(CPU));
     cpu->AF = 0x01B0;
     cpu->BC = 0x0013;
     cpu->DE = 0x00D8;
@@ -43,17 +44,23 @@ void cpu_init(CPU* cpu)
     cpu->SP = 0xFFFE;
     cpu->PC = 0x0100;
     cpu->IME = 0x00;
+    return cpu;
+}
+
+void cpu_deinit(CPU* cpu)
+{
+    free(cpu);
 }
 
 /* Run the CPU */
 void cpu_tick(CPU* cpu)
 {
-    /* TODO: refactor this to account for the following:
-     *          - the proper amount of cycles to run for
-     *          - update flags where needed
-     *          - algorithmically parse instruction encodings
-     *            to increase efficiency of this switch statement
-     */
+    // TODO: refactor this to account for the following:
+    //          - the proper amount of cycles to run for
+    //          - update flags where needed
+    //          - algorithmically parse instruction encodings
+    //            to increase efficiency of this switch statement
+
     uint8_t inst = mem_read(cpu->PC);
     uint8_t temp_nibble = 0x00;     /* Nibble-size operand */
     uint16_t operandw = 0x0000;     /* Word-size operand */
@@ -1504,7 +1511,7 @@ void cpu_tick(CPU* cpu)
             break;
 
         default:
-            sprintf(stderr, "Unrecognized opcode!");
+            fprintf(stderr, "Unrecognized opcode!");
             exit(1); /* Exited with error */
             break;
     }

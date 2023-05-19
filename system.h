@@ -9,10 +9,10 @@
 
 typedef struct
 {
-   CPU cpu;
+   CPU* cpu;
 } System;
 
-System* initialize_system(void);
-void run(System* sys);
+System* system_init(void);
+void system_tick(System* sys);
 
 #endif /* _SYSTEM_H_ */

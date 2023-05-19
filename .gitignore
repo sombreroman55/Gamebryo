@@ -2,12 +2,12 @@
 *~
 *.un
 *.swp
+.cache
 
 # Binary exectuable
 gamebryo
 
-# ImGui stuff
-imgui.ini
+compile_commands.json
 
 # Prerequisites
 *.d

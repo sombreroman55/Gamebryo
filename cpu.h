@@ -7,15 +7,15 @@
 
 #include <stdint.h>
 
-/* TODO: use this struct */
+// TODO: use this struct
 typedef struct
 {
-  uint8_t opcode;           /* Opcode value */
-  char* disassembly;        /* Opcode mnemonic */
-  uint8_t operand_len;      /* Number of operands */
+  uint8_t opcode;           // Opcode value
+  char* disassembly;        // Opcode mnemonic
+  uint8_t operand_len;      // Number of operands
 } instruction;
 
-/* TODO: add interrupt information */
+// TODO: add interrupt information
 typedef struct
 {
     union
@@ -46,14 +46,14 @@ typedef struct
         uint16_t HL;
     };
 
-    /* A is the accumulator register and F is the flags register */
+    // A is the accumulator register and F is the flags register
     union
     {
         struct
         {
             union
             {
-                struct 
+                struct
                 {
                     uint8_t unused : 4;
                     uint8_t C      : 1;
@@ -67,12 +67,12 @@ typedef struct
         };
         uint16_t AF;
     };
-    uint16_t SP;                  /* Stack pointer */
-    uint16_t PC;                  /* Program counter */
-    uint8_t IME;                  /* Interrupt Master Enable flag */
+    uint16_t SP; // Stack pointer
+    uint16_t PC; // Program counter
+    uint8_t IME; // Interrupt Master Enable flag
 } CPU;
 
-void cpu_init(CPU* cpu);
+CPU* cpu_init(void);
 void cpu_tick(CPU* cpu);
 
 #endif /* _CPU_H_ */

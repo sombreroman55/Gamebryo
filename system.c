@@ -2,18 +2,18 @@
  * Implements the virtual Game Boy system
  */
 
+#include <stdlib.h>
 #include "system.h"
 
-void initialize_system(System* system)
+System* system_init(void)
 {
+    // TODO: Initialize other components
+    System* system = (System*)malloc(sizeof(System));
+    system->cpu = cpu_init();
+    return system;
 }
 
-void play(System* sys)
+void system_tick(System* sys)
 {
-    run(&sys->cpu)
-}
-
-void turn_off(System* sys)
-{
-    free(sys);
+    cpu_tick(sys->cpu);
 }
