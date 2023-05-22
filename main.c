@@ -31,6 +31,7 @@ int main (int argc, char** argv)
             // TODO: Handle input
         }
 
+        // TODO: Configure the timing
         system_tick(system);
 
         // TODO: Render the screen

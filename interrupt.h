@@ -1,5 +1,5 @@
 /* interrupt.h
- * Memory interface
+ * Interrupt interface
  */
 
 #ifndef _INTERRUPT_H_

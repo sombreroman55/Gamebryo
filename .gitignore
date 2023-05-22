@@ -3,11 +3,15 @@
 *.un
 *.swp
 .cache
+.clang-format
+*.old.*
+
 
 # Binary exectuable
 gamebryo
 
 compile_commands.json
+docs
 
 # Prerequisites
 *.d
